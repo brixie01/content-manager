@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReliefNow® Content Manager V3</title>
+  <style>
+    :root{
+      --bg:#0a0d09; --panel:#111611; --panel2:#161c15; --line:#263024; --text:#eef2eb; --muted:#95a091; --green:#8BBE29; --yellow:#d7c268; --orange:#dc7a58; --danger:#b94b4b;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at top right, rgba(139,190,41,.12), transparent 28%),var(--bg);color:var(--text)}
+    .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+    .sidebar{padding:22px 16px;border-right:1px solid var(--line);background:rgba(9,12,9,.95);position:sticky;top:0;height:100vh;overflow:auto}
+    .brand-logo{max-width:100%;display:block;background:#0e130e;border:1px solid var(--line);border-radius:16px;padding:12px}
+    .subbrand{font-size:12px;color:var(--muted);margin:12px 4px 18px;line-height:1.5}
+    .asset-stack{display:grid;gap:10px;margin-bottom:18px}
+    .asset-stack img{width:100%;display:block;border-radius:12px;padding:8px;border:1px solid var(--line);background:#f0f6e7}
+    .asset-stack img.dark{background:#101410}
+    .nav{display:grid;gap:8px;margin:18px 0}
+    .nav button{all:unset;padding:11px 12px;border-radius:12px;border:1px solid transparent;color:#b9c0b7;cursor:pointer;font-size:14px}
+    .nav button.active,.nav button:hover{background:#171d16;border-color:#222b20;color:white}
+    .sidebar-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:14px;margin-top:16px}
+    .sidebar-card h4{margin:0 0 8px;font-size:14px}
+    .sidebar-card p,.sidebar-card li{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+    .main{padding:28px 32px 70px}
+    h1,h2,h3,h4{margin:0}
+    .eyebrow{color:#9bbb69;font-size:11px;font-weight:800;letter-spacing:.12em;margin:0 0 4px}
+    .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
+    .status-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);padding:10px 12px;border-radius:999px;color:#c9d0c6;font-size:13px}
+    .status-badge .dot{width:8px;height:8px;border-radius:999px;background:var(--green);box-shadow:0 0 16px var(--green)}
+    .section{display:none}
+    .section.active{display:block}
+    .hero,.panel,.card,.mini-card,.stat-card{border:1px solid var(--line);background:linear-gradient(180deg, #141a13, #101510);border-radius:18px}
+    .hero{padding:24px;display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:18px}
+    .hero h2{font-size:30px;max-width:700px;margin:8px 0}
+    .hero p,.panel p,.helper,.mini-card p{color:var(--muted)}
+    .pill{display:inline-block;border:1px solid #39512a;color:#bddd82;font-size:10px;letter-spacing:.1em;padding:6px 8px;border-radius:999px}
+    .btn-row{display:flex;flex-wrap:wrap;gap:10px}
+    button,.button,label.button{border:0;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;text-decoration:none}
+    .primary{background:var(--green);color:#091007}
+    .secondary{background:#1b231a;color:#eef2eb;border:1px solid #2d382b}
+    .danger{background:#281717;color:#ffc7c7;border:1px solid #5a2b2b}
+    .ghost{background:transparent;color:#cfd6cc;border:1px dashed #2d382b}
+    .panel{padding:20px;margin-bottom:18px}
+    .panel-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+    .panel-head p{margin:4px 0 0;font-size:13px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{padding:18px}
+    .topic-card{display:grid;gap:14px}
+    .topic-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+    .topic-meta{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}
+    .disc{background:#1d2816;color:#b8da7a}
+    .joint{background:#292514;color:#e2cf79}
+    .nerve{background:#2a1a14;color:#f0a07e}
+    .status-draft{background:#222921;color:#cad0c6}
+    .status-approved{background:#182614;color:#bde28f}
+    .status-posted{background:#162027;color:#9cd0f7}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field-grid .full{grid-column:1/-1}
+    label.field{display:grid;gap:6px;font-size:12px;color:#b7beb5}
+    input,select,textarea{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #2d372b;background:#0b0f0a;color:#eef2eb;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#739a24;box-shadow:0 0 0 3px rgba(139,190,41,.12)}
+    textarea{resize:vertical}
+    .helper{font-size:12px;line-height:1.5}
+    .warning,.success{border-radius:14px;padding:14px 16px;font-size:13px}
+    .warning{border:1px solid #5b4720;background:#1d180d;color:#eedcad}
+    .success{border:1px solid #274025;background:#101910;color:#c6efb6}
+    .empty{padding:36px;text-align:center;color:var(--muted)}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse}
+    th,td{text-align:left;padding:10px;border-bottom:1px solid #1d251c;font-size:13px;vertical-align:top}
+    th{color:#7f8a7c;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+    .headline-cell{font-weight:700;min-width:320px}
+    .search{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .search input{max-width:340px}
+    .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .mini-card{padding:16px;border:1px solid var(--line);background:#121712;border-radius:16px}
+    .mini-card h4{margin:0 0 8px;font-size:15px}
+    .asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .asset{padding:12px;border:1px solid var(--line);border-radius:16px;background:#111611}
+    .asset p{font-size:12px;font-weight:700;color:#d6dcd2;margin:0 0 10px}
+    .asset img{width:100%;height:92px;object-fit:contain;display:block;border-radius:12px;padding:8px;background:#eff6e6}
+    .asset.dark img{background:#0e120e}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .stat-card{padding:16px}
+    .stat-card .n{font-size:28px;font-weight:900;margin-top:8px}
+    .bar-list{display:grid;gap:10px;margin-top:6px}
+    .bar-row{display:grid;grid-template-columns:180px 1fr 32px;gap:10px;align-items:center}
+    .bar{height:10px;border-radius:999px;background:#1a2119;overflow:hidden;border:1px solid #263024}
+    .bar span{display:block;height:100%;background:var(--green)}
+    .tiny{font-size:11px;color:#7e897b}
+    .muted{color:var(--muted)}
+    .sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(10,13,9,0),rgba(10,13,9,.92) 20%, rgba(10,13,9,.98));padding-top:14px;margin-top:8px}
+    .file-input{position:relative;overflow:hidden}
+    .file-input input{position:absolute;inset:0;opacity:0;cursor:pointer}
+    @media (max-width: 1180px){
+      .grid-3,.asset-grid,.stats-grid{grid-template-columns:1fr}
+      .cards{grid-template-columns:1fr}
+      .field-grid{grid-template-columns:1fr}
+    }
+    @media (max-width: 980px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+      .nav{display:flex;overflow:auto}
+      .main{padding:20px 16px 48px}
+      .hero,.panel-head,.topbar{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <img class="brand-logo" src="assets/reliefnow-laser-centers.png" alt="ReliefNow Laser Centers" />
+    <div class="subbrand">
+      <strong>Content Manager V3</strong><br>
+      Free workflow system for ReliefNow® daily content.<br>
+      Real brand assets included.
+    </div>
+    <div class="asset-stack">
+      <img class="dark" src="assets/ditch-drugs-skip-scalpel.png" alt="Ditch the Drugs and Skip the Scalpel" />
+      <img src="assets/get-your-second-opinion.png" alt="Get Your Second Opinion" />
+    </div>
+    <div class="nav" id="nav"></div>
+    <div class="sidebar-card">
+      <h4>Free version workflow</h4>
+      <p>Use the app to manage topics, refresh prompt blocks, copy image prompts, copy social-copy prompts, track what is used, and avoid duplicates — then paste the copied prompt into ChatGPT.</p>
+    </div>
+    <div class="sidebar-card">
+      <h4>Included V3 upgrades</h4>
+      <ul>
+        <li>Daily board with Disc / Joint / Nerve</li>
+        <li>Refresh topic and refresh all prompt builders</li>
+        <li>Approve / Posted states</li>
+        <li>Copy image prompt / social prompt / everything</li>
+        <li>Monthly usage stats and fatigue warnings</li>
+      </ul>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">RELIEFNOW® CONTENT ENGINE</p>
+        <h1 id="viewTitle">Today</h1>
+      </div>
+      <div class="status-badge"><span class="dot"></span> Zero API cost workflow</div>
+    </div>
+
+    <section id="today" class="section active"></section>
+    <section id="history" class="section"></section>
+    <section id="ideas" class="section"></section>
+    <section id="stats" class="section"></section>
+    <section id="brand" class="section"></section>
+    <section id="settings" class="section"></section>
+  </main>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEYS = ['reliefnow-content-manager-v3','reliefnow-content-manager-v2','reliefnow-content-manager-v1'];
+  const NAV_ITEMS = [
+    ['today','Today'],['history','History'],['ideas','Idea Bank'],['stats','Stats'],['brand','Brand Rules'],['settings','Settings']
+  ];
+  const defaultRules = [
+    'No guarantees or diagnosis claims',
+    'No fear tactics',
+    'No dramatic pain behavior',
+    'Avoid pills, injections, and surgery imagery',
+    'Use composed, believable expressions',
+    'Use the official uploaded ReliefNow® assets exactly',
+    'Subject generally on the right with clean copy space on the left unless a different composition is intentionally chosen',
+    'Use premium realistic healthcare advertising style'
+  ];
+  const seedUsed = [
+    ['Nerve','WHY DO MY FEET FEEL NUMB, BURNING, OR TINGLING?','Feet','Rest','Symptoms'],
+    ['Nerve','WHY CAN NEUROPATHY MAKE NORMAL TOUCH FEEL UNCOMFORTABLE?','Feet','Touch','Sensitivity'],
+    ['Nerve','WHY CAN NEUROPATHY AFFECT YOUR BALANCE EVEN WHEN YOU DON’T FEEL DIZZY?','Feet','Walking','Balance'],
+    ['Nerve','WHY CAN YOUR FEET FEEL COLD EVEN WHEN THEY’RE WARM TO THE TOUCH?','Feet','Rest','Sensation'],
+    ['Nerve','WHY CAN NEUROPATHY MAKE YOUR FEET FEEL HEAVY EVEN WHEN THEY AREN’T SWOLLEN?','Feet','Walking','Sensation'],
+    ['Disc','IS YOUR LEG PAIN ACTUALLY STARTING IN YOUR LOWER BACK?','Lower back','Radiating leg pain','Source'],
+    ['Disc','DOES A BULGING OR HERNIATED DISC ALWAYS MEAN SURGERY?','Spine','Disc finding','Education'],
+    ['Disc','WHY DOES SITTING SOMETIMES MAKE DISC-RELATED PAIN FEEL WORSE?','Lower back','Sitting','Position'],
+    ['Disc','WHY CAN A BULGING OR HERNIATED DISC CAUSE PAIN DOWN YOUR LEG?','Lower back','Leg pain','Radiation'],
+    ['Disc','WHY DOES LOWER BACK PAIN CHANGE FROM DAY TO DAY?','Lower back','Daily activity','Pattern'],
+    ['Disc','WHY CAN COUGHING OR SNEEZING SOMETIMES TRIGGER SHARP BACK OR LEG PAIN?','Lower back','Coughing or sneezing','Pressure'],
+    ['Disc','DOES SITTING TOO LONG MAKE YOUR DISC PAIN WORSE? HERE’S WHY.','Lower back','Sitting','Position'],
+    ['Disc','LEG PAIN, NUMBNESS, OR TINGLING? THE DISC MAY BE THE REAL SOURCE.','Lower back','Leg symptoms','Source'],
+    ['Joint','WHY DOES YOUR KNEE HURT MORE GOING DOWN STAIRS?','Knee','Stairs','Load'],
+    ['Joint','KNEE STIFF AFTER SITTING? HERE’S WHAT MAY BE GOING ON.','Knee','Sitting','Stiffness'],
+    ['Joint','KNEE PAIN WHEN YOU TURN OR PIVOT? DON’T IGNORE THE PATTERN.','Knee','Turning or pivoting','Motion'],
+    ['Joint','SHOULDER PAIN WHEN YOU REACH OVERHEAD? THE POSITION MAY BE THE CLUE.','Shoulder','Overhead reach','Position'],
+    ['Joint','HIP PAIN WHEN YOU FIRST STAND UP? YOUR FIRST FEW STEPS MAY TELL YOU SOMETHING.','Hip','Standing up','First steps'],
+    ['Joint','ANKLE PAIN WHEN YOU PUSH OFF TO WALK OR RUN? THE MOTION MAY BE THE CLUE.','Ankle','Push-off','Motion'],
+    ['Joint','NECK PAIN WHEN YOU TURN TO CHECK YOUR BLIND SPOT? RANGE OF MOTION MAY BE THE CLUE.','Neck','Turning','Range of motion'],
+    ['Joint','HAND OR WRIST PAIN WHEN YOU GRIP OR CARRY SOMETHING? THE LOAD MAY BE THE CLUE.','Wrist/hand','Grip or carry','Load'],
+    ['Disc','LOW BACK PAIN WHEN YOU BEND TO PICK SOMETHING UP? PAY ATTENTION TO THE MOTION.','Lower back','Bending','Motion'],
+    ['Joint','ELBOW PAIN WHEN YOU LIFT, GRIP, OR TWIST? IT MAY NOT JUST BE “OVERUSE.”','Elbow','Lift/grip/twist','Load'],
+    ['Joint','FOOT PAIN AFTER STANDING FOR A WHILE? PAY ATTENTION TO WHEN IT STARTS.','Foot','Standing','Timing'],
+    ['Joint','KNEE PAIN WHEN YOU GET OUT OF THE CAR? THAT TWISTING MOTION MAY MATTER.','Knee','Exiting car','Twisting'],
+    ['Nerve','HAND NUMBNESS OR TINGLING WHEN YOU WAKE UP? YOUR SLEEPING POSITION MAY BE PART OF THE CLUE.','Hand','Sleeping','Position'],
+    ['Disc','LOW BACK PAIN AFTER STANDING IN ONE PLACE TOO LONG? THE POSITION MAY BE PART OF THE PATTERN.','Lower back','Standing','Position']
+  ].map((x,i)=>({id:'seed-'+i,category:x[0],headline:x[1],bodyArea:x[2],trigger:x[3],angle:x[4],date:'Prior content',status:'Used'}));
+
+  const defaultState = {
+    used: seedUsed,
+    ideas: [],
+    ui: { activeView:'today' },
+    today: {
+      date: new Date().toISOString().slice(0,10),
+      contentType: 'Social Still',
+      board: {
+        Disc: makeSlot('Disc','Light'),
+        Joint: makeSlot('Joint','Dark'),
+        Nerve: makeSlot('Nerve','Cinematic')
+      }
+    },
+    settings: {
+      brandGreen:'#8BBE29',
+      closing:`Get Your Second Opinion™\nDitch the Drugs and Skip the Scalpel®\n\nFind a provider near you at https://reliefnowlaser.com/\n\nSee real patient testimonials and success stories at ReliefNow Nation:\nhttps://www.youtube.com/@ReliefNowNation`,
+      visualMap:{Disc:'Light',Joint:'Dark',Nerve:'Cinematic'},
+      rules: defaultRules,
+      styles:{
+        Light:'Bright premium medical-advertising look, clean light background, ReliefNow® green accents, crisp typography, calm believable expressions, airy negative space.',
+        Dark:'Dark premium clinical look, deep charcoal/green background, contrast-rich lighting, sophisticated modern typography, composed expressions, premium healthcare campaign aesthetic.',
+        Cinematic:'Cinematic premium healthcare look, dramatic but polished lighting, subtle atmosphere, clean composition, believable emotion, ReliefNow® green highlights, high-end ad quality.'
+      },
+      contentTypes:{
+        'Social Still': { requiredAssets:['reliefnow','ditch','secondOpinion'], ruleText:'Use all three official assets on the still poster. ReliefNow® logo near the top, Ditch the Drugs and Skip the Scalpel® logo included, and Get Your Second Opinion™ CTA bar included.'},
+        'Testimonial Overlay': { requiredAssets:['reliefnow','ditch','secondOpinion'], ruleText:'Use the ReliefNow® logo and Ditch the Drugs and Skip the Scalpel® logo near the top. Place the Get Your Second Opinion™ CTA bar at the bottom. Keep the overlay clean and readable.'},
+        'Blog Hero': { requiredAssets:['reliefnow','ditch'], ruleText:'Use the ReliefNow® logo and Ditch the Drugs and Skip the Scalpel® logo. CTA bar is optional unless specifically requested. Maintain wide hero-friendly composition.'}
+      }
+    }
+  };
+
+  function makeSlot(category, style){
+    return { category, style, headline:'', bodyArea:'', trigger:'', angle:'', notes:'', status:'Draft', platformStatus:{Meta:false,Instagram:false,LinkedIn:false}, imageDone:false, posted:false };
+  }
+
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function normalize(s=''){ return s.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  function tokens(s){ return new Set(normalize(s).split(' ').filter(w=>w.length>2 && !['the','and','when','your','you','may','can','why','does','after','for','too','what','here','with','from','that'].includes(w))); }
+  function similarity(a,b){ const A=tokens(a), B=tokens(b); if(!A.size || !B.size) return 0; const inter=[...A].filter(x=>B.has(x)).length; const union=new Set([...A,...B]).size; return Math.round((inter/union)*100); }
+  function monthKey(dateStr){ if(!dateStr || dateStr==='Prior content') return ''; return String(dateStr).slice(0,7); }
+  function loadState(){
+    for(const key of STORAGE_KEYS){
+      try{
+        const raw = localStorage.getItem(key);
+        if(raw){
+          const parsed = JSON.parse(raw);
+          return migrate(parsed);
+        }
+      }catch(e){}
+    }
+    return structuredClone(defaultState);
+  }
+  function migrate(data){
+    const merged = structuredClone(defaultState);
+    // basic carry-forward
+    if(Array.isArray(data.used)) merged.used = data.used;
+    if(Array.isArray(data.ideas)) merged.ideas = data.ideas;
+    if(data.settings) {
+      merged.settings = { ...merged.settings, ...data.settings, visualMap:{...merged.settings.visualMap, ...(data.settings.visualMap||{})}, styles:{...merged.settings.styles, ...(data.settings.styles||{})}, contentTypes:{...merged.settings.contentTypes, ...(data.settings.contentTypes||{})} };
+      merged.settings.rules = Array.isArray(data.settings.rules) ? data.settings.rules : merged.settings.rules;
+    }
+    if(data.today && data.today.board){
+      merged.today = { ...merged.today, ...data.today, board:{...merged.today.board, ...data.today.board} };
+    }
+    if(data.ui) merged.ui = { ...merged.ui, ...data.ui };
+    return merged;
+  }
+  function saveState(){ localStorage.setItem(STORAGE_KEYS[0], JSON.stringify(state)); }
+
+  let state = loadState();
+
+  function copy(text, success='Copied to clipboard'){ navigator.clipboard.writeText(text).then(()=>notify(success)); }
+  function notify(message){ window.alert(message); }
+  function escapeHtml(s=''){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  function getFatigueWarnings(){
+    const currentMonth = state.today.date.slice(0,7);
+    const monthItems = state.used.filter(x=>monthKey(x.date)===currentMonth);
+    const bodyCount = {};
+    monthItems.forEach(x=>{ if(x.bodyArea) bodyCount[x.bodyArea] = (bodyCount[x.bodyArea]||0)+1; });
+    return Object.entries(bodyCount).filter(([,n])=>n>=3).sort((a,b)=>b[1]-a[1]);
+  }
+
+  function findClosest(slot){
+    if(!slot.headline.trim()) return null;
+    const scored = state.used.map(item=>({
+      item,
+      score: similarity(slot.headline,item.headline)
+        + (normalize(slot.category)===normalize(item.category)?10:0)
+        + (slot.bodyArea && normalize(slot.bodyArea)===normalize(item.bodyArea)?12:0)
+        + (slot.trigger && normalize(slot.trigger)===normalize(item.trigger)?12:0)
+        + (slot.angle && normalize(slot.angle)===normalize(item.angle)?8:0)
+    })).sort((a,b)=>b.score-a.score)[0];
+    if(!scored) return null;
+    return { ...scored.item, score: Math.min(100, scored.score) };
+  }
+
+  function assetRuleText(){
+    const type = state.today.contentType;
+    const cfg = state.settings.contentTypes[type] || state.settings.contentTypes['Social Still'];
+    return cfg.ruleText;
+  }
+
+  function buildFullDailyPrompt(){
+    const used = state.used.map((x,i)=>`${i+1}. [${x.category}] ${x.headline} | Body area: ${x.bodyArea || '-'} | Trigger: ${x.trigger || '-'} | Angle: ${x.angle || '-'}`).join('\n');
+    const fatigue = getFatigueWarnings().map(([area,n])=>`- ${area} has already been used ${n} times this month; prefer variety if possible.`).join('\n');
+    const type = state.today.contentType;
+    return `Create today’s ReliefNow® ${type} content.\n\nI need exactly 3 completely fresh topics: 1 Disc, 1 Joint, and 1 Nerve.\n\nIMPORTANT: Check the USED CONTENT list below. Do not reuse an exact headline, substantially similar topic, or the same body-area + trigger + educational angle combination. If a candidate feels too close, replace it.\n\nFor each of the 3 selected topics provide:\n1. Category\n2. Headline\n3. Body area\n4. Trigger / scenario\n5. Educational angle\n6. Premium 4:5 (1080×1350) image/poster prompt\n7. Meta copy\n8. Instagram copy\n9. LinkedIn copy\n10. Optimized hashtags for each platform\n\nToday’s visual rotation:\n- Disc: ${state.settings.visualMap.Disc}\n- Joint: ${state.settings.visualMap.Joint}\n- Nerve: ${state.settings.visualMap.Nerve}\n\nStyle preset guidance:\n- Light: ${state.settings.styles.Light}\n- Dark: ${state.settings.styles.Dark}\n- Cinematic: ${state.settings.styles.Cinematic}\n\nBrand rules:\n${state.settings.rules.map(x=>`- ${x}`).join('\n')}\n- ReliefNow® green: ${state.settings.brandGreen}\n- Official assets available and required according to content type. Use the uploaded ReliefNow® Laser Centers logo, “Ditch the Drugs and Skip the Scalpel®” logo, and “Get Your Second Opinion™” CTA bar as the source of truth. Do not redraw, distort, recolor, crop, or substitute them.\n- Content type rule: ${assetRuleText()}\n${fatigue ? '\nMonthly fatigue warnings:\n'+fatigue : ''}\n\nRequired closing block for social copy:\n${state.settings.closing}\n\nUSED CONTENT — DO NOT REPEAT OR CLOSELY DUPLICATE:\n${used}`;
+  }
+
+  function buildRefreshCategoryPrompt(category){
+    const slot = state.today.board[category];
+    const other = ['Disc','Joint','Nerve'].filter(c=>c!==category).map(c=>{
+      const s = state.today.board[c];
+      return s.headline ? `Keep ${c} unchanged: ${s.headline} | ${s.bodyArea || '-'} | ${s.trigger || '-'} | ${s.angle || '-'}` : `No approved ${c} topic yet.`;
+    }).join('\n');
+    return `Replace the ${category} topic only for today’s ReliefNow® ${state.today.contentType} content.\n\n${other}\n\nGenerate 1 brand-new ${category} topic that is not similar to previously used content. Return:\n1. Category\n2. Headline\n3. Body area\n4. Trigger / scenario\n5. Educational angle\n6. Premium 4:5 (1080×1350) image/poster prompt using the ${slot.style} preset\n7. Meta copy\n8. Instagram copy\n9. LinkedIn copy\n10. Optimized hashtags\n\nBrand requirements:\n- ${assetRuleText()}\n- ReliefNow® green: ${state.settings.brandGreen}\n- ${state.settings.styles[slot.style]}\n\nUsed content to avoid:\n${state.used.map((x,i)=>`${i+1}. [${x.category}] ${x.headline} | ${x.bodyArea || '-'} | ${x.trigger || '-'} | ${x.angle || '-'}`).join('\n')}`;
+  }
+
+  function buildImagePrompt(slot){
+    const type = state.today.contentType;
+    const assetInstruction = assetRuleText();
+    return `Create a premium 4:5 vertical healthcare social media ${type.toLowerCase()} for ReliefNow® Laser Centers.\n\nHeadline:\n"${slot.headline || '[Insert headline]'}"\n\nCategory: ${slot.category}\nBody area: ${slot.bodyArea || '[body area]'}\nTrigger / scenario: ${slot.trigger || '[trigger]'}\nEducational angle: ${slot.angle || '[angle]'}\n\nVisual treatment: ${slot.style}\n${state.settings.styles[slot.style]}\n\nRequired brand rules:\n${state.settings.rules.map(x=>`- ${x}`).join('\n')}\n- ReliefNow® green: ${state.settings.brandGreen}\n- ${assetInstruction}\n- Use the official uploaded ReliefNow® Laser Centers logo, the official “Ditch the Drugs and Skip the Scalpel®” logo, and the official “Get Your Second Opinion™” CTA bar whenever required by the content type rule.\n- Place the subject naturally and realistically. Mild discomfort only, not dramatic pain.\n- Keep the composition premium, believable, and social-media ready.\n\nAdditional notes:\n${slot.notes || 'No extra notes.'}`;
+  }
+
+  function buildSocialPrompt(slot){
+    return `Write platform-ready social copy for this ReliefNow® topic.\n\nCategory: ${slot.category}\nHeadline: ${slot.headline || '[headline]'}\nBody area: ${slot.bodyArea || '[body area]'}\nTrigger / scenario: ${slot.trigger || '[trigger]'}\nEducational angle: ${slot.angle || '[angle]'}\n\nNeed copy for:\n- Meta\n- Instagram\n- LinkedIn\n\nRequirements:\n- Keep the tone educational and premium\n- Avoid guarantees and diagnosis claims\n- Include optimized hashtags for each platform\n- Include this exact closing block:\n${state.settings.closing}`;
+  }
+
+  function buildEverything(slot){
+    return `TOPIC\nCategory: ${slot.category}\nHeadline: ${slot.headline || '[headline]'}\nBody area: ${slot.bodyArea || '[body area]'}\nTrigger / scenario: ${slot.trigger || '[trigger]'}\nEducational angle: ${slot.angle || '[angle]'}\nStyle: ${slot.style}\n\nIMAGE PROMPT\n${buildImagePrompt(slot)}\n\nSOCIAL COPY PROMPT\n${buildSocialPrompt(slot)}`;
+  }
+
+  function setView(view){ state.ui.activeView=view; saveState(); render(); }
+  function updateSlot(category, field, value){ state.today.board[category][field]=value; saveState(); render(false); }
+  function togglePlatform(category, platform){ const o=state.today.board[category].platformStatus; o[platform]=!o[platform]; saveState(); render(false); }
+  function todayProgress(slot){
+    const checks = [!!slot.headline, slot.imageDone, slot.platformStatus.Meta, slot.platformStatus.Instagram, slot.platformStatus.LinkedIn, slot.posted];
+    return checks.filter(Boolean).length;
+  }
+  function approvalClass(status){ return status==='Approved' ? 'status-approved' : status==='Posted' ? 'status-posted' : 'status-draft'; }
+  function categoryClass(cat){ return cat.toLowerCase(); }
+
+  function approveSlot(category){
+    const slot = state.today.board[category];
+    const closest = findClosest(slot);
+    if(closest && closest.score >= 72){
+      const proceed = confirm(`This ${category} topic looks similar to existing content (${closest.score}% signal).\n\nClosest match:\n${closest.headline}\n\nApprove anyway?`);
+      if(!proceed) return;
+    }
+    slot.status = slot.status === 'Approved' ? 'Draft' : 'Approved';
+    saveState(); render();
+  }
+  function saveIdea(category){
+    const slot = state.today.board[category];
+    if(!slot.headline.trim()) return alert('Add a headline first.');
+    state.ideas.unshift({id:uid(), category:slot.category, headline:slot.headline, bodyArea:slot.bodyArea, trigger:slot.trigger, angle:slot.angle, date:state.today.date, notes:slot.notes, style:slot.style});
+    saveState(); render(); notify('Saved to Idea Bank');
+  }
+  function markUsed(category){
+    const slot = state.today.board[category];
+    if(!slot.headline.trim()) return alert('Add a headline first.');
+    state.used.unshift({id:uid(), category:slot.category, headline:slot.headline, bodyArea:slot.bodyArea, trigger:slot.trigger, angle:slot.angle, date:state.today.date, status:'Used'});
+    slot.status='Posted'; slot.posted=true;
+    saveState(); render(); notify('Marked as Used and Posted');
+  }
+  function clearToday(){
+    if(!confirm('Clear today’s board?')) return;
+    state.today.board = {
+      Disc: makeSlot('Disc',state.settings.visualMap.Disc),
+      Joint: makeSlot('Joint',state.settings.visualMap.Joint),
+      Nerve: makeSlot('Nerve',state.settings.visualMap.Nerve)
+    };
+    saveState(); render();
+  }
+
+  function exportData(){
+    const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download='reliefnow-content-manager-v3-backup.json'; a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function importData(file){
+    const r = new FileReader();
+    r.onload = () => {
+      try{ state = migrate(JSON.parse(r.result)); saveState(); render(); notify('Backup imported'); }
+      catch(err){ alert('Invalid JSON backup file'); }
+    };
+    r.readAsText(file);
+  }
+
+  function render(renderAll=true){
+    // nav
+    const nav = document.getElementById('nav');
+    nav.innerHTML = NAV_ITEMS.map(([id,label])=>`<button data-view="${id}" class="${state.ui.activeView===id?'active':''}">${label}</button>`).join('');
+    nav.querySelectorAll('button').forEach(btn=>btn.onclick=()=>setView(btn.dataset.view));
+    document.getElementById('viewTitle').textContent = NAV_ITEMS.find(([id])=>id===state.ui.activeView)?.[1] || 'Today';
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(state.ui.activeView).classList.add('active');
+    renderToday(); renderHistory(); renderIdeas(); renderStats(); renderBrand(); renderSettings();
+  }
+
+  function renderToday(){
+    const el = document.getElementById('today');
+    const fatigue = getFatigueWarnings();
+    const contentTypeOptions = Object.keys(state.settings.contentTypes).map(t=>`<option ${state.today.contentType===t?'selected':''}>${t}</option>`).join('');
+    el.innerHTML = `
+      <div class="hero">
+        <div>
+          <span class="pill">DAILY WORKFLOW BOARD</span>
+          <h2>Build, approve, refresh, and track today’s Disc / Joint / Nerve content.</h2>
+          <p>Use the free workflow here, then paste the copied prompt into ChatGPT for generation.</p>
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="copyDaily">Copy Daily ChatGPT Prompt</button>
+          <button class="secondary" id="refreshAll">Copy Refresh All Prompt</button>
+          <button class="ghost" id="clearToday">Clear Board</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Today setup</h3>
+            <p>Select what kind of content you’re generating today. Brand rules and asset requirements will adjust automatically.</p>
+          </div>
+        </div>
+        <div class="field-grid">
+          <label class="field"><span>Date</span><input id="todayDate" type="date" value="${state.today.date}"></label>
+          <label class="field"><span>Content type</span><select id="contentType">${contentTypeOptions}</select></label>
+        </div>
+        <p class="helper">Current content-type rule: ${escapeHtml(assetRuleText())}</p>
+        ${fatigue.length ? `<div class="warning" style="margin-top:12px"><strong>Monthly fatigue warning:</strong><br>${fatigue.map(([area,n])=>`${escapeHtml(area)} has been used ${n} times this month.`).join('<br>')}</div>` : ''}
+      </div>
+      <div class="grid-3">
+        ${['Disc','Joint','Nerve'].map(category=>renderTopicCard(category)).join('')}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Prompt preview</h3><p>What will be copied by the Daily Prompt button.</p></div></div>
+        <textarea readonly rows="14">${buildFullDailyPrompt()}</textarea>
+      </div>
+    `;
+    document.getElementById('copyDaily').onclick = ()=> copy(buildFullDailyPrompt(), 'Daily prompt copied');
+    document.getElementById('refreshAll').onclick = ()=> copy(`Replace all 3 topics for today’s ReliefNow® ${state.today.contentType} content. I need 1 fresh Disc, 1 fresh Joint, and 1 fresh Nerve topic. Avoid used content listed below. Return topic details, image prompt, Meta copy, Instagram copy, LinkedIn copy, and hashtags for each.\n\nUsed content:\n${state.used.map((x,i)=>`${i+1}. [${x.category}] ${x.headline} | ${x.bodyArea || '-'} | ${x.trigger || '-'} | ${x.angle || '-'}`).join('\n')}`,'Refresh-all prompt copied');
+    document.getElementById('clearToday').onclick = clearToday;
+    document.getElementById('todayDate').onchange = e=>{ state.today.date=e.target.value; saveState(); render(); };
+    document.getElementById('contentType').onchange = e=>{ state.today.contentType=e.target.value; saveState(); render(); };
+
+    ['Disc','Joint','Nerve'].forEach(category=>bindTopicCard(category));
+  }
+
+  function renderTopicCard(category){
+    const slot = state.today.board[category];
+    const closest = findClosest(slot);
+    const progress = todayProgress(slot);
+    return `
+      <div class="card topic-card" id="card-${category}">
+        <div class="topic-head">
+          <div>
+            <div class="topic-meta">
+              <span class="badge ${categoryClass(category)}">${category}</span>
+              <span class="badge ${approvalClass(slot.status)}">${slot.status}</span>
+              <span class="badge status-draft">${slot.style}</span>
+            </div>
+            <h3 style="margin-top:10px">${slot.headline ? escapeHtml(slot.headline) : `${category} topic`}</h3>
+          </div>
+          <div class="tiny">Progress ${progress}/6</div>
+        </div>
+        <div class="field-grid">
+          <label class="field full"><span>Headline</span><input data-cat="${category}" data-field="headline" value="${escapeHtml(slot.headline)}" placeholder="Paste or type the chosen headline"></label>
+          <label class="field"><span>Body area</span><input data-cat="${category}" data-field="bodyArea" value="${escapeHtml(slot.bodyArea)}" placeholder="e.g. Knee"></label>
+          <label class="field"><span>Trigger / scenario</span><input data-cat="${category}" data-field="trigger" value="${escapeHtml(slot.trigger)}" placeholder="e.g. Stairs"></label>
+          <label class="field"><span>Educational angle</span><input data-cat="${category}" data-field="angle" value="${escapeHtml(slot.angle)}" placeholder="e.g. Load"></label>
+          <label class="field"><span>Style</span><select data-cat="${category}" data-field="style">${['Light','Dark','Cinematic'].map(s=>`<option ${slot.style===s?'selected':''}>${s}</option>`).join('')}</select></label>
+          <label class="field full"><span>Notes / revisions</span><textarea data-cat="${category}" data-field="notes" rows="3" placeholder="Optional reminders or design notes">${escapeHtml(slot.notes)}</textarea></label>
+        </div>
+        ${closest && slot.headline ? `<div class="${closest.score>=60?'warning':'success'}"><strong>${closest.score}% similarity signal</strong><br>Closest existing topic: ${escapeHtml(closest.headline)}<br><span class="tiny">${escapeHtml(closest.category)} • ${escapeHtml(closest.bodyArea||'-')} • ${escapeHtml(closest.trigger||'-')} • ${escapeHtml(closest.angle||'-')}</span></div>` : '<div class="helper">Enter a headline to get duplicate feedback.</div>'}
+        <div class="mini-card">
+          <h4>Status tracker</h4>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="secondary toggle-image" data-cat="${category}">${slot.imageDone ? 'Image Prompt Ready ✓' : 'Image Prompt Ready'}</button>
+            ${['Meta','Instagram','LinkedIn'].map(p=>`<button class="secondary toggle-platform" data-cat="${category}" data-platform="${p}">${p} ${slot.platformStatus[p] ? '✓' : ''}</button>`).join('')}
+            <button class="secondary toggle-posted" data-cat="${category}">${slot.posted ? 'Posted ✓' : 'Posted'}</button>
+          </div>
+        </div>
+        <div class="sticky-actions">
+          <div class="btn-row">
+            <button class="secondary refresh-one" data-cat="${category}">Refresh Topic</button>
+            <button class="secondary copy-image" data-cat="${category}">Copy Image Prompt</button>
+            <button class="secondary copy-social" data-cat="${category}">Copy Social Prompt</button>
+            <button class="secondary copy-all" data-cat="${category}">Copy Everything</button>
+            <button class="primary approve" data-cat="${category}">${slot.status==='Approved' ? 'Unapprove' : 'Approve'}</button>
+            <button class="secondary save-idea" data-cat="${category}">Save for Later</button>
+            <button class="ghost mark-used" data-cat="${category}">Mark as Used</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindTopicCard(category){
+    const root = document.getElementById(`card-${category}`);
+    root.querySelectorAll('[data-field]').forEach(input=>{
+      input.oninput = e => updateSlot(category, e.target.dataset.field, e.target.value);
+    });
+    root.querySelector('.refresh-one').onclick = ()=>copy(buildRefreshCategoryPrompt(category), `${category} refresh prompt copied`);
+    root.querySelector('.copy-image').onclick = ()=>copy(buildImagePrompt(state.today.board[category]), `${category} image prompt copied`);
+    root.querySelector('.copy-social').onclick = ()=>copy(buildSocialPrompt(state.today.board[category]), `${category} social prompt copied`);
+    root.querySelector('.copy-all').onclick = ()=>copy(buildEverything(state.today.board[category]), `${category} full package copied`);
+    root.querySelector('.approve').onclick = ()=>approveSlot(category);
+    root.querySelector('.save-idea').onclick = ()=>saveIdea(category);
+    root.querySelector('.mark-used').onclick = ()=>markUsed(category);
+    root.querySelector('.toggle-image').onclick = ()=>{ state.today.board[category].imageDone = !state.today.board[category].imageDone; saveState(); render(); };
+    root.querySelector('.toggle-posted').onclick = ()=>{ state.today.board[category].posted = !state.today.board[category].posted; if(state.today.board[category].posted) state.today.board[category].status='Posted'; saveState(); render(); };
+    root.querySelectorAll('.toggle-platform').forEach(btn=>btn.onclick=()=>togglePlatform(category, btn.dataset.platform));
+  }
+
+  function renderHistory(){
+    const el = document.getElementById('history');
+    const q = state._historyQuery || '';
+    const rows = state.used.filter(x=>[x.category,x.headline,x.bodyArea,x.trigger,x.angle,x.date].join(' ').toLowerCase().includes(q.toLowerCase()));
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Used content history</h3><p>${state.used.length} recorded topics. Search by headline, body area, trigger, angle, or date.</p></div>
+          <div class="search"><input id="historyQuery" placeholder="Search history..." value="${escapeHtml(q)}"><button class="secondary" id="clearHistorySearch">Clear</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Category</th><th>Headline</th><th>Body area</th><th>Trigger</th><th>Angle</th><th>Date</th></tr></thead>
+            <tbody>
+              ${rows.map(x=>`<tr><td><span class="badge ${categoryClass(x.category)}">${escapeHtml(x.category)}</span></td><td class="headline-cell">${escapeHtml(x.headline)}</td><td>${escapeHtml(x.bodyArea||'')}</td><td>${escapeHtml(x.trigger||'')}</td><td>${escapeHtml(x.angle||'')}</td><td>${escapeHtml(x.date||'')}</td></tr>`).join('') || `<tr><td colspan="6" class="empty">No matching history found.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    document.getElementById('historyQuery').oninput = e=>{ state._historyQuery=e.target.value; renderHistory(); };
+    document.getElementById('clearHistorySearch').onclick = ()=>{ state._historyQuery=''; renderHistory(); };
+  }
+
+  function renderIdeas(){
+    const el = document.getElementById('ideas');
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><div><h3>Idea Bank</h3><p>Store good ideas without marking them as used.</p></div></div>
+        ${state.ideas.length ? `<div class="cards">${state.ideas.map(item=>`
+          <div class="mini-card">
+            <div class="topic-meta"><span class="badge ${categoryClass(item.category)}">${escapeHtml(item.category)}</span><span class="tiny">${escapeHtml(item.style || '')}</span></div>
+            <h4>${escapeHtml(item.headline)}</h4>
+            <p>${escapeHtml(item.bodyArea || '-')} • ${escapeHtml(item.trigger || '-')} • ${escapeHtml(item.angle || '-')}</p>
+            ${item.notes ? `<p class="tiny">${escapeHtml(item.notes)}</p>` : ''}
+            <div class="btn-row" style="margin-top:12px">
+              <button class="secondary idea-use" data-id="${item.id}">Load to Today</button>
+              <button class="ghost idea-delete" data-id="${item.id}">Delete</button>
+            </div>
+          </div>`).join('')}</div>` : '<div class="empty">No saved ideas yet.</div>'}
+      </div>`;
+    el.querySelectorAll('.idea-use').forEach(btn=>btn.onclick=()=>{
+      const item = state.ideas.find(x=>x.id===btn.dataset.id); if(!item) return;
+      state.today.board[item.category] = { ...state.today.board[item.category], category:item.category, style:item.style || state.settings.visualMap[item.category], headline:item.headline, bodyArea:item.bodyArea, trigger:item.trigger, angle:item.angle, notes:item.notes || '', status:'Draft' };
+      saveState(); setView('today');
+    });
+    el.querySelectorAll('.idea-delete').forEach(btn=>btn.onclick=()=>{ state.ideas = state.ideas.filter(x=>x.id!==btn.dataset.id); saveState(); renderIdeas(); });
+  }
+
+  function renderStats(){
+    const el = document.getElementById('stats');
+    const currentMonth = state.today.date.slice(0,7);
+    const monthUsed = state.used.filter(x=>monthKey(x.date)===currentMonth);
+    const catCounts = {Disc:0, Joint:0, Nerve:0};
+    const bodyCounts = {};
+    monthUsed.forEach(item=>{ catCounts[item.category] = (catCounts[item.category]||0)+1; if(item.bodyArea) bodyCounts[item.bodyArea] = (bodyCounts[item.bodyArea]||0)+1; });
+    const maxBody = Math.max(1, ...Object.values(bodyCounts));
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><div><h3>Monthly usage stats</h3><p>Track volume and spot overused body areas for ${currentMonth}.</p></div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="muted">Used this month</div><div class="n">${monthUsed.length}</div></div>
+          <div class="stat-card"><div class="muted">Disc posts</div><div class="n">${catCounts.Disc}</div></div>
+          <div class="stat-card"><div class="muted">Joint posts</div><div class="n">${catCounts.Joint}</div></div>
+          <div class="stat-card"><div class="muted">Nerve posts</div><div class="n">${catCounts.Nerve}</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Body-area frequency</h3><p>High counts can indicate content fatigue.</p></div></div>
+        ${Object.keys(bodyCounts).length ? `<div class="bar-list">${Object.entries(bodyCounts).sort((a,b)=>b[1]-a[1]).map(([area,n])=>`<div class="bar-row"><div>${escapeHtml(area)}</div><div class="bar"><span style="width:${(n/maxBody)*100}%"></span></div><div>${n}</div></div>`).join('')}</div>` : '<div class="empty">No dated posts recorded this month yet.</div>'}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Daily production status</h3><p>Snapshot of today’s board progress.</p></div></div>
+        <div class="cards">
+          ${['Disc','Joint','Nerve'].map(cat=>{
+            const s=state.today.board[cat];
+            return `<div class="mini-card"><h4>${cat}</h4><p>${s.headline ? escapeHtml(s.headline) : 'No topic yet'}</p><div class="tiny">Topic ${s.headline ? '✓' : '—'} | Image ${s.imageDone ? '✓' : '—'} | Meta ${s.platformStatus.Meta ? '✓' : '—'} | Instagram ${s.platformStatus.Instagram ? '✓' : '—'} | LinkedIn ${s.platformStatus.LinkedIn ? '✓' : '—'} | Posted ${s.posted ? '✓' : '—'}</div></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function renderBrand(){
+    const el = document.getElementById('brand');
+    const typeCards = Object.entries(state.settings.contentTypes).map(([name,cfg])=>`<div class="mini-card"><h4>${escapeHtml(name)}</h4><p>${escapeHtml(cfg.ruleText)}</p><div class="tiny">Required assets: ${cfg.requiredAssets.join(', ')}</div></div>`).join('');
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><div><h3>Official ReliefNow® brand assets</h3><p>The app uses your real uploaded logos and CTA bar.</p></div></div>
+        <div class="asset-grid">
+          <div class="asset dark"><p>ReliefNow® Laser Centers</p><img src="assets/reliefnow-laser-centers.png" alt="ReliefNow logo"></div>
+          <div class="asset dark"><p>Ditch the Drugs and Skip the Scalpel®</p><img src="assets/ditch-drugs-skip-scalpel.png" alt="Ditch the Drugs and Skip the Scalpel"></div>
+          <div class="asset"><p>Get Your Second Opinion™</p><img src="assets/get-your-second-opinion.png" alt="Get Your Second Opinion"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Content-type logo rules</h3><p>These rules are inserted automatically into copied prompts.</p></div></div>
+        <div class="cards">${typeCards}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Style presets</h3><p>Used by image-prompt builder and daily workflow.</p></div></div>
+        <div class="cards">
+          ${['Light','Dark','Cinematic'].map(name=>`<div class="mini-card"><h4>${name}</h4><p>${escapeHtml(state.settings.styles[name])}</p></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  function renderSettings(){
+    const el = document.getElementById('settings');
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><div><h3>Workflow settings</h3><p>Edit brand rules, visual rotation, and backup your local data.</p></div></div>
+        <div class="field-grid">
+          <label class="field"><span>Brand green</span><input id="brandGreen" value="${escapeHtml(state.settings.brandGreen)}"></label>
+          <label class="field"><span>Disc visual</span><select id="discVisual">${['Light','Dark','Cinematic'].map(x=>`<option ${state.settings.visualMap.Disc===x?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label class="field"><span>Joint visual</span><select id="jointVisual">${['Light','Dark','Cinematic'].map(x=>`<option ${state.settings.visualMap.Joint===x?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label class="field"><span>Nerve visual</span><select id="nerveVisual">${['Light','Dark','Cinematic'].map(x=>`<option ${state.settings.visualMap.Nerve===x?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label class="field full"><span>Brand rules (one per line)</span><textarea id="rulesBox" rows="8">${escapeHtml(state.settings.rules.join('\n'))}</textarea></label>
+          <label class="field full"><span>Required closing block</span><textarea id="closingBox" rows="8">${escapeHtml(state.settings.closing)}</textarea></label>
+          <label class="field full"><span>Light preset</span><textarea id="styleLight" rows="3">${escapeHtml(state.settings.styles.Light)}</textarea></label>
+          <label class="field full"><span>Dark preset</span><textarea id="styleDark" rows="3">${escapeHtml(state.settings.styles.Dark)}</textarea></label>
+          <label class="field full"><span>Cinematic preset</span><textarea id="styleCinematic" rows="3">${escapeHtml(state.settings.styles.Cinematic)}</textarea></label>
+        </div>
+        <div class="btn-row" style="margin-top:16px">
+          <button class="primary" id="saveSettings">Save Settings</button>
+          <button class="secondary" id="exportBtn">Export Backup</button>
+          <label class="button secondary file-input">Import Backup<input id="importInput" type="file" accept="application/json"></label>
+          <button class="danger" id="resetBtn">Reset to Starter Data</button>
+        </div>
+      </div>`;
+    document.getElementById('saveSettings').onclick = ()=>{
+      state.settings.brandGreen = document.getElementById('brandGreen').value.trim() || '#8BBE29';
+      state.settings.visualMap.Disc = document.getElementById('discVisual').value;
+      state.settings.visualMap.Joint = document.getElementById('jointVisual').value;
+      state.settings.visualMap.Nerve = document.getElementById('nerveVisual').value;
+      state.settings.rules = document.getElementById('rulesBox').value.split('\n').map(x=>x.trim()).filter(Boolean);
+      state.settings.closing = document.getElementById('closingBox').value;
+      state.settings.styles.Light = document.getElementById('styleLight').value;
+      state.settings.styles.Dark = document.getElementById('styleDark').value;
+      state.settings.styles.Cinematic = document.getElementById('styleCinematic').value;
+      // refresh empty styles on board if needed
+      ['Disc','Joint','Nerve'].forEach(cat=>{ if(!state.today.board[cat].style) state.today.board[cat].style = state.settings.visualMap[cat]; });
+      saveState(); render(); notify('Settings saved');
+    };
+    document.getElementById('exportBtn').onclick = exportData;
+    document.getElementById('importInput').onchange = e=>{ if(e.target.files[0]) importData(e.target.files[0]); };
+    document.getElementById('resetBtn').onclick = ()=>{ if(confirm('Reset all local data to the starter dataset?')){ state = structuredClone(defaultState); saveState(); render(); } };
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
